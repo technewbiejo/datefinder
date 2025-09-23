@@ -1,5 +1,3 @@
-# Firebase Studio
+#Develop and design by Jo 
+#Simple website datefinder used for manufacturing company
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
