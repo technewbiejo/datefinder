@@ -15,6 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CalendarCheck, AlertCircle, Loader } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import ShelfLifeCalculator from '@/components/shelf-life-calculator';
 
 import { findDateAction } from '@/app/actions';
 
@@ -160,7 +161,7 @@ export default function DateFinder() {
                 </Card>
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 space-y-6">
                 <Card className="sticky top-6">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="font-headline text-2xl">History</CardTitle>
@@ -191,6 +192,8 @@ export default function DateFinder() {
                         )}
                     </CardContent>
                 </Card>
+
+                <ShelfLifeCalculator />
             </div>
         </div>
     );
