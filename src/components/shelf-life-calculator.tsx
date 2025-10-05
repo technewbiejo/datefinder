@@ -96,7 +96,7 @@ export default function ShelfLifeCalculator() {
                         <ArrowRight className="hidden sm:block h-4 w-4 text-muted-foreground" />
                         <DatePicker date={endDateDiff} setDate={setEndDateDiff} placeholder="End Date" />
                     </div>
-                    <Button onClick={calculateDifference} className="w-full">Calculate Difference</Button>
+                    <Button onClick={calculateDifference} variant="gradientBlue" className="w-full">Calculate Difference</Button>
                     {diffResult && (
                         <Alert>
                             <HelpCircle className="h-4 w-4" />
@@ -137,7 +137,7 @@ export default function ShelfLifeCalculator() {
                             </Select>
                         </div>
                     </div>
-                    <Button onClick={calculateShelfLife} className="w-full">Calculate End Date</Button>
+                    <Button onClick={calculateShelfLife} variant="gradientBlue" className="w-full">Calculate End Date</Button>
                     {addResult && (
                         <Alert variant="default" className="w-full bg-primary/10 border-primary/50">
                             <HelpCircle className="h-4 w-4 stroke-primary" />

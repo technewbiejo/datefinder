@@ -23,16 +23,16 @@ function Calendar({
             classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
                 month: "space-y-4",
-                caption: "flex justify-center pt-1 relative items-center",
+                caption: "flex justify-between items-center px-2 pt-1 relative",
                 caption_label: "text-sm font-medium hidden",
-                caption_dropdowns: "flex justify-center gap-2",
+                caption_dropdowns: "flex justify-start gap-2",
                 nav: "space-x-1 flex items-center",
                 nav_button: cn(
                     buttonVariants({ variant: "outline" }),
-                    "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+                    "h-7 w-7 bg-transparent p-0 opacity-80 hover:opacity-100"
                 ),
-                nav_button_previous: "absolute left-[-2.5rem]",
-                nav_button_next: "absolute right-[-2.5rem]",
+                nav_button_previous: "absolute right-8",
+                nav_button_next: "absolute right-0",
                 table: "w-full border-collapse space-y-1",
                 head_row: "flex justify-around",
                 head_cell:
@@ -46,18 +46,18 @@ function Calendar({
                 day_range_end: "day-range-end",
                 day_selected:
                     "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                day_today: "bg-accent text-accent-foreground",
+                day_today: "bg-accent text-accent-foreground dark:bg-accent dark:text-accent-foreground bg-blue-700 text-white",
                 day_outside:
                     "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
                 day_disabled: "text-muted-foreground opacity-50",
                 day_range_middle:
                     "aria-selected:bg-accent aria-selected:text-accent-foreground",
                 day_hidden: "invisible",
-                weeknumber: "text-blue-600",
+                weeknumber: "text-muted-foreground dark:text-orange-400",
                 ...classNames,
             }}
             components={{
-                Dropdown: ({ value, onChange, children, ...props }) => {
+                Dropdown: ({ value, onChange, children, 'aria-label': ariaLabel }) => {
                     const options = React.Children.toArray(children) as React.ReactElement<React.HTMLProps<HTMLOptionElement>>[]
                     const selected = options.find((child) => child.props.value === value)
                     const handleChange = (value: string) => {
@@ -66,6 +66,8 @@ function Calendar({
                         } as React.ChangeEvent<HTMLSelectElement>
                         onChange?.(changeEvent)
                     }
+                    const isMonth = ariaLabel?.includes('month');
+
                     return (
                         <Select
                             value={value?.toString()}
@@ -73,12 +75,22 @@ function Calendar({
                                 handleChange(value)
                             }}
                         >
-                            <SelectTrigger className="w-auto focus:ring-0 focus:ring-offset-0 font-headline">
+                            <SelectTrigger
+                                className={cn(
+                                    "w-auto focus:ring-0 focus:ring-offset-0 font-headline border-none",
+                                    "btn-gradient-blue text-white",
+                                    "dark:bg-secondary dark:text-secondary-foreground dark:hover:bg-secondary/80",
+                                )}
+                            >
                                 <SelectValue>{selected?.props?.children}</SelectValue>
                             </SelectTrigger>
-                            <SelectContent className="max-h-48">
+                            <SelectContent className="max-h-48 bg-background border-border">
                                 {options.map((option, id: number) => (
-                                    <SelectItem key={`${option.props.value}-${id}`} value={option.props.value?.toString() ?? ""}>
+                                    <SelectItem
+                                        key={`${option.props.value}-${id}`}
+                                        value={option.props.value?.toString() ?? ""}
+                                        className="focus:bg-accent"
+                                    >
                                         {option.props.children}
                                     </SelectItem>
                                 ))}
