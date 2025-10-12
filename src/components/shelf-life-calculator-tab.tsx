@@ -29,7 +29,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-export default function ShelfLifeCalculator() {
+export default function ShelfLifeCalculatorTab() {
     // State for date difference calculator
     const [startDateDiff, setStartDateDiff] = useState<Date | undefined>();
     const [endDateDiff, setEndDateDiff] = useState<Date | undefined>();

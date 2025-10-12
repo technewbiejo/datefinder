@@ -15,7 +15,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CalendarCheck, AlertCircle, Loader } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import ShelfLifeCalculator from '@/components/shelf-life-calculator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { findDateAction } from '@/app/actions';
@@ -29,7 +28,7 @@ type HistoryItem = {
     output: string;
 };
 
-export default function DateFinder() {
+export default function FindDateWeekTab() {
     const [isPending, startTransition] = useTransition();
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -166,7 +165,7 @@ export default function DateFinder() {
 
             <div className="md:col-span-2 space-y-6">
                 <div className="sticky top-6 flex flex-col space-y-6">
-                    <Card className="flex flex-col h-96">
+                    <Card className="flex flex-col h-[42rem]">
                         <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
                             <CardTitle className="font-headline text-2xl">History</CardTitle>
                             {history.length > 0 && (
@@ -200,7 +199,6 @@ export default function DateFinder() {
                             </ScrollArea>
                         </CardContent>
                     </Card>
-                    <ShelfLifeCalculator />
                 </div>
             </div>
         </div>
