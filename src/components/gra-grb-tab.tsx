@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Trash, Copy } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 const GraGrbSchema = z.object({
     value: z.string().min(1, { message: 'GRA/GRB value is required.' }),
@@ -26,6 +27,7 @@ type GraGrbItem = {
 
 export default function GraGrbTab() {
     const [list, setList] = useState<GraGrbItem[]>([]);
+    const { toast } = useToast();
 
     useEffect(() => {
         const storedList = localStorage.getItem('graGrbList');
@@ -45,6 +47,15 @@ export default function GraGrbTab() {
         localStorage.removeItem('graGrbList');
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            toast({
+                title: 'Copied!',
+                description: `"${text}" has been copied to your clipboard.`,
+            });
+        });
+    };
+
     const form = useForm<z.infer<typeof GraGrbSchema>>({
         resolver: zodResolver(GraGrbSchema),
         defaultValues: {
@@ -58,6 +69,7 @@ export default function GraGrbTab() {
             id: new Date().toISOString(),
             timestamp: new Date().toISOString(),
             ...data,
+            value: data.value.toUpperCase(),
         };
         updateList(newItem);
         form.reset();
@@ -80,7 +92,11 @@ export default function GraGrbTab() {
                                     <FormItem>
                                         <FormLabel>GRA / GRB Value</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g., GRA 12345" {...field} />
+                                            <Input
+                                                placeholder="e.g., GRA 12345"
+                                                {...field}
+                                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -126,9 +142,15 @@ export default function GraGrbTab() {
                                         <div className="grid gap-1 text-sm">
                                             <div className="flex justify-between items-start">
                                                 <p className="font-semibold text-foreground text-lg">{item.value}</p>
-                                                <p className="text-xs text-muted-foreground text-right">
-                                                    {new Date(item.timestamp).toLocaleString()}
-                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-xs text-muted-foreground text-right">
+                                                        {new Date(item.timestamp).toLocaleString()}
+                                                    </p>
+                                                    <Button variant="ghost" size="icon" onClick={() => copyToClipboard(item.value)} className="h-6 w-6">
+                                                        <Copy className="h-4 w-4" />
+                                                        <span className="sr-only">Copy</span>
+                                                    </Button>
+                                                </div>
                                             </div>
                                             {item.remark && <p className="text-muted-foreground">Remark: {item.remark}</p>}
                                         </div>
