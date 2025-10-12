@@ -37,7 +37,7 @@ export default function Home() {
                             Week Date Finder
                         </h1>
                         <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-                            A simple tool to find dates from week numbers.
+                            A simple tool to find dates from week numbers. Supported on Website and mobile phones. Developed by Jo L
                         </p>
                     </div>
                     <div className="absolute top-0 right-0">
