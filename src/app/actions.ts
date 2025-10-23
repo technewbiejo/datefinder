@@ -6,6 +6,10 @@ const FormSchema = z.object({
     yearWeek: z.string().length(4, "Must be a 4-digit number").regex(/^\d{4}$/, "Must be a 4-digit number"),
 });
 
+const MonthAlphabetSchema = z.object({
+    yearMonthDay: z.string().regex(/^\d{2}\s[A-La-l]\s\d{2}$/, "Format must be YY M DD (e.g., 25 B 11)"),
+});
+
 type State = {
     fullDate?: string | null;
     error?: string | null;
@@ -72,5 +76,53 @@ export async function findDateAction(
     } catch (e) {
         console.error(e);
         return { error: 'An unexpected error occurred while calculating the date. Please try again.' };
+    }
+}
+
+
+export async function findDateFromMonthAlphabetAction(
+    data: z.infer<typeof MonthAlphabetSchema>
+): Promise<State> {
+    const validatedFields = MonthAlphabetSchema.safeParse({
+        ...data,
+        yearMonthDay: data.yearMonthDay.toUpperCase(),
+    });
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid format. Use YY M DD (e.g., 25 B 11).' };
+    }
+
+    const { yearMonthDay } = validatedFields.data;
+    const parts = yearMonthDay.split(' ');
+    const yearDigits = parseInt(parts[0], 10);
+    const monthChar = parts[1];
+    const day = parseInt(parts[2], 10);
+
+    const year = 2000 + yearDigits;
+    const monthIndex = monthChar.charCodeAt(0) - 'A'.charCodeAt(0);
+
+    if (year < 2000 || year > 2099) {
+        return { error: 'Invalid year. Must be between 2000 and 2099.' };
+    }
+
+    if (monthIndex < 0 || monthIndex > 11) {
+        return { error: 'Invalid month character. Must be between A and L.' };
+    }
+
+    try {
+        const date = new Date(year, monthIndex, day);
+
+        // Check if date is valid (e.g. not Feb 30th)
+        if (date.getFullYear() !== year || date.getMonth() !== monthIndex || date.getDate() !== day) {
+            return { error: `Invalid day for the selected month.` };
+        }
+
+        const monthName = date.toLocaleString('en-US', { month: 'long' });
+        const fullDate = `${day}${getOrdinal(day)} ${monthName} ${year}`;
+
+        return { fullDate: fullDate };
+    } catch (e) {
+        console.error(e);
+        return { error: 'An unexpected error occurred. Please check your input.' };
     }
 }

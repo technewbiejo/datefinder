@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash } from 'lucide-react';
+import { Trash, Info } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,11 +16,16 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CalendarCheck, AlertCircle, Loader } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-import { findDateAction } from '@/app/actions';
+import { findDateAction, findDateFromMonthAlphabetAction } from '@/app/actions';
 
 const FormSchema = z.object({
     yearWeek: z.string().length(4, "Must be a 4-digit number").regex(/^\d{4}$/, "Must be a 4-digit number"),
+});
+
+const MonthAlphabetSchema = z.object({
+    yearMonthDay: z.string().regex(/^(?:\d{2}\s[A-La-l]\s\d{2})?$/, "Format must be YY M DD (e.g., 25 B 11)"),
 });
 
 type HistoryItem = {
@@ -30,8 +35,14 @@ type HistoryItem = {
 
 export default function FindDateWeekTab() {
     const [isPending, startTransition] = useTransition();
+    const [isPendingMonth, startTransitionMonth] = useTransition();
+
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const [resultMonth, setResultMonth] = useState<string | null>(null);
+    const [errorMonth, setErrorMonth] = useState<string | null>(null);
+
     const [history, setHistory] = useState<HistoryItem[]>([]);
 
     useEffect(() => {
@@ -59,6 +70,13 @@ export default function FindDateWeekTab() {
         },
     });
 
+    const formMonth = useForm<z.infer<typeof MonthAlphabetSchema>>({
+        resolver: zodResolver(MonthAlphabetSchema),
+        defaultValues: {
+            yearMonthDay: '',
+        },
+    });
+
     function onSubmit(data: z.infer<typeof FormSchema>) {
         startTransition(async () => {
             setError(null);
@@ -69,6 +87,24 @@ export default function FindDateWeekTab() {
             } else if (fullDate) {
                 setResult(fullDate);
                 updateHistory({ input: data.yearWeek, output: fullDate });
+            }
+        });
+    }
+
+    function onMonthSubmit(data: z.infer<typeof MonthAlphabetSchema>) {
+        if (!data.yearMonthDay) {
+            setErrorMonth("Input cannot be empty.");
+            return;
+        }
+        startTransitionMonth(async () => {
+            setErrorMonth(null);
+            setResultMonth(null);
+            const { fullDate, error } = await findDateFromMonthAlphabetAction(data);
+            if (error) {
+                setErrorMonth(error);
+            } else if (fullDate) {
+                setResultMonth(fullDate);
+                // Not adding to history for now, can be added if requested
             }
         });
     }
@@ -154,6 +190,77 @@ export default function FindDateWeekTab() {
                                             <AlertCircle className="h-4 w-4" />
                                             <AlertTitle className="font-headline">Error</AlertTitle>
                                             <AlertDescription>{error}</AlertDescription>
+                                        </Alert>
+                                    )}
+                                </CardFooter>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-start justify-between">
+                        <div>
+                            <CardTitle className="font-headline text-2xl">Based on Month Alphabet</CardTitle>
+                            <CardDescription>Enter YY M DD to find the date. E.g., <span className="font-mono bg-muted p-1 rounded-md">25 B 11</span> for Feb 11, 2025.</CardDescription>
+                        </div>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <Info className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[150px] text-wrap">
+                                    <p>Locate at Lot Code : D25 B H11 means D25 is year , B is month and H11 is date .</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </CardHeader>
+                    <CardContent>
+                        <Form {...formMonth}>
+                            <form onSubmit={formMonth.handleSubmit(onMonthSubmit)} className="space-y-6">
+                                <FormField
+                                    control={formMonth.control}
+                                    name="yearMonthDay"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Year, Month, Day (YY M DD)</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="25 B 11" {...field} className="font-mono text-base" onChange={e => field.onChange(e.target.value.toUpperCase())} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" variant="gradientBlue" disabled={isPendingMonth} className="w-full">
+                                    {isPendingMonth ? <Loader className="animate-spin" /> : 'Find Date'}
+                                    {isPendingMonth && <span className="ml-2">Calculating...</span>}
+                                </Button>
+                            </form>
+                        </Form>
+                    </CardContent>
+                    <AnimatePresence>
+                        {(resultMonth || errorMonth) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <CardFooter className="flex flex-col pt-0">
+                                    {resultMonth && (
+                                        <Alert className="w-full bg-primary/10 border-primary/50 text-primary-foreground">
+                                            <CalendarCheck className="h-4 w-4 stroke-primary" />
+                                            <AlertTitle className="font-headline text-primary">Calculated Date</AlertTitle>
+                                            <AlertDescription className="font-bold font-headline text-lg text-foreground">{resultMonth}</AlertDescription>
+                                        </Alert>
+                                    )}
+                                    {errorMonth && (
+                                        <Alert variant="destructive" className="w-full">
+                                            <AlertCircle className="h-4 w-4" />
+                                            <AlertTitle className="font-headline">Error</AlertTitle>
+                                            <AlertDescription>{errorMonth}</AlertDescription>
                                         </Alert>
                                     )}
                                 </CardFooter>
