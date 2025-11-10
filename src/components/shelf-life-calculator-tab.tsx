@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { format, differenceInDays, addDays, addMonths, addYears } from 'date-fns';
-import { CalendarIcon, ArrowRight, Plus, HelpCircle } from 'lucide-react';
+import { format, differenceInDays, addDays, addMonths, addYears, subDays, subMonths, subYears } from 'date-fns';
+import { CalendarIcon, ArrowRight, Plus, Minus, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -35,11 +35,12 @@ export default function ShelfLifeCalculatorTab() {
     const [endDateDiff, setEndDateDiff] = useState<Date | undefined>();
     const [diffResult, setDiffResult] = useState<string | null>(null);
 
-    // State for adding shelf life
-    const [startDateAdd, setStartDateAdd] = useState<Date | undefined>(new Date());
+    // State for adding/substracting shelf life
+    const [shelfLifeDate, setShelfLifeDate] = useState<Date | undefined>(new Date());
     const [shelfLifeValue, setShelfLifeValue] = useState<string>('365');
     const [shelfLifeUnit, setShelfLifeUnit] = useState<'days' | 'months' | 'years'>('days');
-    const [addResult, setAddResult] = useState<string | null>(null);
+    const [shelfLifeOperation, setShelfLifeOperation] = useState<'add' | 'subtract'>('add');
+    const [shelfLifeResult, setShelfLifeResult] = useState<string | null>(null);
 
     const calculateDifference = () => {
         if (startDateDiff && endDateDiff) {
@@ -61,23 +62,38 @@ export default function ShelfLifeCalculatorTab() {
     };
 
     const calculateShelfLife = () => {
-        if (startDateAdd && shelfLifeValue) {
+        if (shelfLifeDate && shelfLifeValue) {
             const value = parseInt(shelfLifeValue, 10);
             if (isNaN(value)) {
-                setAddResult('Please enter a valid number for the shelf life.');
+                setShelfLifeResult('Please enter a valid number for the shelf life.');
                 return;
             }
+
             let newDate;
-            if (shelfLifeUnit === 'days') {
-                newDate = addDays(startDateAdd, value);
-            } else if (shelfLifeUnit === 'months') {
-                newDate = addMonths(startDateAdd, value);
-            } else {
-                newDate = addYears(startDateAdd, value);
+            let resultText = '';
+
+            if (shelfLifeOperation === 'add') {
+                if (shelfLifeUnit === 'days') {
+                    newDate = addDays(shelfLifeDate, value);
+                } else if (shelfLifeUnit === 'months') {
+                    newDate = addMonths(shelfLifeDate, value);
+                } else {
+                    newDate = addYears(shelfLifeDate, value);
+                }
+                resultText = `The end date is ${format(newDate, 'PPP')}.`;
+            } else { // subtract
+                if (shelfLifeUnit === 'days') {
+                    newDate = subDays(shelfLifeDate, value);
+                } else if (shelfLifeUnit === 'months') {
+                    newDate = subMonths(shelfLifeDate, value);
+                } else {
+                    newDate = subYears(shelfLifeDate, value);
+                }
+                resultText = `The original date is ${format(newDate, 'PPP')}.`;
             }
-            setAddResult(`The end date is ${format(newDate, 'PPP')}.`);
+            setShelfLifeResult(resultText);
         } else {
-            setAddResult('Please select a start date and enter a shelf life value.');
+            setShelfLifeResult('Please select a date and enter a shelf life value.');
         }
     };
 
@@ -108,41 +124,58 @@ export default function ShelfLifeCalculatorTab() {
 
                 <Separator />
 
-                {/* Add Shelf Life Calculator */}
+                {/* Add/Subtract Shelf Life Calculator */}
                 <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground">Add Shelf Life to Date</h3>
-                    <div className="space-y-2">
-                        <DatePicker date={startDateAdd} setDate={setStartDateAdd} placeholder="Start Date" />
-                        <div className="flex items-center gap-2">
-                            <Plus className="h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="number"
-                                value={shelfLifeValue}
-                                onChange={(e) => setShelfLifeValue(e.target.value)}
-                                placeholder="e.g., 365"
-                                className="w-24"
+                    <h3 className="font-semibold text-foreground">Add or Subtract Shelf Life</h3>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex-1">
+                            <DatePicker
+                                date={shelfLifeDate}
+                                setDate={setShelfLifeDate}
+                                placeholder={shelfLifeOperation === 'add' ? 'Start Date' : 'End Date'}
                             />
-                            <Select
-                                value={shelfLifeUnit}
-                                onValueChange={(value: 'days' | 'months' | 'years') => setShelfLifeUnit(value)}
-                            >
-                                <SelectTrigger className="w-[120px]">
-                                    <SelectValue placeholder="Unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="days">Days</SelectItem>
-                                    <SelectItem value="months">Months</SelectItem>
-                                    <SelectItem value="years">Years</SelectItem>
-                                </SelectContent>
-                            </Select>
                         </div>
                     </div>
-                    <Button onClick={calculateShelfLife} variant="gradientBlue" className="w-full">Calculate End Date</Button>
-                    {addResult && (
+                    <div className="flex items-center gap-2">
+                        <Select
+                            value={shelfLifeOperation}
+                            onValueChange={(value: 'add' | 'subtract') => setShelfLifeOperation(value)}
+                        >
+                            <SelectTrigger className="w-auto sm:w-[120px]">
+                                <SelectValue placeholder="Operation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="add">Add (+)</SelectItem>
+                                <SelectItem value="subtract">Subtract (-)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Input
+                            type="number"
+                            value={shelfLifeValue}
+                            onChange={(e) => setShelfLifeValue(e.target.value)}
+                            placeholder="e.g., 365"
+                            className="w-24"
+                        />
+                        <Select
+                            value={shelfLifeUnit}
+                            onValueChange={(value: 'days' | 'months' | 'years') => setShelfLifeUnit(value)}
+                        >
+                            <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="days">Days</SelectItem>
+                                <SelectItem value="months">Months</SelectItem>
+                                <SelectItem value="years">Years</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Button onClick={calculateShelfLife} variant="gradientBlue" className="w-full">Calculate Date</Button>
+                    {shelfLifeResult && (
                         <Alert variant="default" className="w-full bg-primary/10 border-primary/50">
                             <HelpCircle className="h-4 w-4 stroke-primary" />
                             <AlertTitle className="text-primary">Result</AlertTitle>
-                            <AlertDescription className="text-foreground">{addResult}</AlertDescription>
+                            <AlertDescription className="text-foreground">{shelfLifeResult}</AlertDescription>
                         </Alert>
                     )}
                 </div>
