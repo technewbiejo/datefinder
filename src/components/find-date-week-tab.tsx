@@ -21,8 +21,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { findDateAction, findDateFromMonthAlphabetAction } from '@/app/actions';
 
 const FormSchema = z.object({
-    yearWeek: z.string().length(4, "Must be a 4-digit number").regex(/^\d{4}$/, "Must be a 4-digit number"),
+    yearWeek: z.string().regex(/^\d{3,4}$/, "Must be 3 or 4 digits (e.g., 545 or 2545)"),
 });
+
 
 const MonthAlphabetSchema = z.object({
     yearMonthDay: z.string().regex(/^(?:\d{2}\s[A-La-l]\s\d{2})?$/, "Format must be YY M DD (e.g., 25 B 11)"),
@@ -144,7 +145,7 @@ export default function FindDateWeekTab() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="font-headline text-2xl">Find Date from Week</CardTitle>
-                        <CardDescription>Enter YYWW to find the date. E.g., <span className="font-mono bg-muted p-1 rounded-md">2445</span> for week 45 of 2024.</CardDescription>
+                        <CardDescription>Enter YYWW to find the date. E.g., <span className="font-mono bg-muted p-1 rounded-md">2445 or 445</span> for week 45 of 2024.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Form {...form}>

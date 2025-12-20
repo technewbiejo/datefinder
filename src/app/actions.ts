@@ -3,8 +3,10 @@
 import { z } from 'zod';
 
 const FormSchema = z.object({
-    yearWeek: z.string().length(4, "Must be a 4-digit number").regex(/^\d{4}$/, "Must be a 4-digit number"),
+    yearWeek: z.string().regex(/^\d{3,4}$/, "Must be a 3 or 4 digit number"),
 });
+
+
 
 const MonthAlphabetSchema = z.object({
     yearMonthDay: z.string().regex(/^\d{2}\s[A-La-l]\s\d{2}$/, "Format must be YY M DD (e.g., 25 B 11)"),
@@ -40,11 +42,23 @@ export async function findDateAction(
     }
 
     const { yearWeek } = validatedFields.data;
-    const yearDigits = parseInt(yearWeek.substring(0, 2), 10);
-    const week = parseInt(yearWeek.substring(2, 4), 10);
+    let yearDigits: number;
+    let week: number;
 
-    if (yearDigits < 17 || yearDigits > 26) {
-        return { error: 'Invalid year. Year (YY) must be between 17 and 26.' };
+    if (yearWeek.length === 4) {
+        // YYWW
+        yearDigits = parseInt(yearWeek.substring(0, 2), 10);
+        week = parseInt(yearWeek.substring(2, 4), 10);
+    } else {
+        // YWW → convert to 20Y + decade
+        const y = parseInt(yearWeek.substring(0, 1), 10);
+        yearDigits = 20 + y; // 5 -> 25 (meaning 2025)
+        week = parseInt(yearWeek.substring(1, 3), 10);
+    }
+
+
+    if (yearDigits < 17 || yearDigits > 29) {
+        return { error: 'Invalid year. Year (YY) must be between 17 and 29.' };
     }
 
     if (week < 1 || week > 53) {
